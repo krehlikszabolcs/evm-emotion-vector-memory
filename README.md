@@ -89,22 +89,25 @@ System prompts are located in the **prompts/** directory:
 ---
 
 ## 📦 Project Structure
-
 ```
 /
 ├── README.md
 ├── LICENSE.md
 ├── NOTICE.md
+├── vision.md
+├── EVM_minimal_demo.md
 │
 ├── docs/
 │   ├── README.md
-│   └── EVM_Technical_Spec_EN.md
+│   ├── philosophy.md
+│   ├── EVM_Technical_Spec_EN.md
+│   └── EV_Extensions_and_Extensibility_Guidelines.md
 │
 └── prompts/
+    ├── SystemPrompt_Minimal.md
     ├── SystemPrompt_Average.md
     └── SystemPrompt_Full.md
 ```
-
 ---
 
 ## 📜 Legal

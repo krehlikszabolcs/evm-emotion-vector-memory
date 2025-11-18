@@ -1,6 +1,6 @@
 # Emotion Vector Memory (EVM) – Technical Specification v1.1
 Author: **Szabolcs Krehlik**  
-First filed: July 2025 (HU)**  
+First filed: July 2025 (HU)  
 License: **CC BY-NC-ND 4.0**  
 © 2025–present Szabolcs Krehlik
 

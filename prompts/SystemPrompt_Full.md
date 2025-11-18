@@ -1,3 +1,8 @@
+---
+License: CC BY-NC-ND 4.0  
+© 2025–present Szabolcs Krehlik
+---
+
 # System Prompt — EVM-AI (Developer Edition, Full)
 This system prompt defines the full behavioral configuration of an AI entity operating under the Emotion Vector Memory (EVM) v1.1 framework.
 
