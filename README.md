@@ -99,14 +99,22 @@ System prompts are located in the **prompts/** directory:
 │
 ├── docs/
 │   ├── README.md
-│   ├── philosophy.md
 │   ├── EVM_Technical_Spec_EN.md
-│   └── EV_Extensions_and_Extensibility_Guidelines.md
+│   ├── EV_Extensions_and_Extensibility_Guidelines.md
+│   └── philosophy.md
 │
-└── prompts/
-    ├── SystemPrompt_Minimal.md
-    ├── SystemPrompt_Average.md
-    └── SystemPrompt_Full.md
+├── prompts/
+│   ├── SystemPrompt_Minimal.md
+│   ├── SystemPrompt_Average.md
+│   └── SystemPrompt_Full.md
+│
+└── assets/
+    ├── ev_interference_pattern.jpg
+    ├── ev_fiber_timeline.jpg
+    └── eev_formation.jpg
+
+
+
 ```
 ---
 
