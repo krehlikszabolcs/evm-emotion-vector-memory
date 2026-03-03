@@ -1,129 +1,68 @@
 # Emotion Vector Memory (EVM)
-### A next-generation emotional memory architecture for AI
 
-**Author:** Szabolcs Krehlik  
-**Status:** Patent Pending (Hungarian Patent Office)  
-**License:** CC BY-NC-ND 4.0  
-© 2025–present Szabolcs Krehlik
+Emotion Vector Memory (EVM) is a model-agnostic identity continuity and interaction telemetry standard for long-term AI systems.
 
----
+**Author:** Szabolcs Krehlik (ORCID: 0009-0003-8623-7876)  
+**© 2025–present. All rights reserved.**  
+**Patent status:** Filing in preparation / Patent pending
 
-## 🌟 Overview
+## License and Commercial Use
 
-**Emotion Vector Memory (EVM)** is a novel emotional-state and personality-coherence system for artificial intelligence.
+This repository and the EVM specification are released under:  
+**Creative Commons Attribution–NonCommercial–NoDerivatives 4.0 International (CC BY-NC-ND 4.0)**
 
-While traditional AI models treat each interaction as isolated, EVM introduces a structured emotional layer that enables **stable behaviour, long-term continuity, and coherent emotional identity**.
+**Commercial implementation, SaaS deployment, production integration, enterprise usage, and derivative architectural systems are expressly reserved and require a separate written agreement.**  
+See: [COMMERCIAL_LICENSE_REQUIRED.md](COMMERCIAL_LICENSE_REQUIRED.md) and [PATENT_NOTICE.md](PATENT_NOTICE.md)
 
-The system stores each interaction on three synchronized levels:
+## Official Specification (Canonical / Normative)
 
-- **internal emotional reflections (DIA / subDIA)**  
-- **vectorized emotional transitions (EV)**  
-- **external responses (ANS)**  
+The canonical normative specification is published on Zenodo:
 
-Together, these form a persistent emotional baseline and an evolving identity for the AI.
+**EVM v2.1 — Unified Directed Vector Identity Standard**  
+https://zenodo.org/records/18664771
 
----
+GitHub content is provided for visibility and reference implementation examples. The Zenodo DOI release remains the authoritative standard.
 
-## 🧠 Key Concepts
+## What EVM Defines (v2.1)
 
-- **EV – Emotion Vector**  
-  Numeric emotional representation of each interaction.  
-  *(x1, y1, z1, x2, y2, z2, E, W)*
+EVM defines a closed directed vector interaction ontology:
 
-- **PEV – Personal Emotion Vector**  
-  Long-term emotional trajectory of the user.
+- Each interaction generates exactly one directed vector segment: **EVᵢ = (x1,y1,z1,g1,e1,w1) → (x2,y2,z2,g2,e2,w2)**
+- Dual-track identity separation: **PEV (human trajectory)** and **EEV (AI entity trajectory)**
+- **FEV envelope constraint** with boundary recovery to prevent fixation
+- Deterministic logging and reconstructability
+- Interoperability extensions via **Appendix A**, including:
+  - default distance metric
+  - extractor determinism requirements
+  - Canonical Identity Snapshot (**CIS**) export format
 
-- **EEV – Entity Emotion Vector**  
-  Long-term emotional baseline of the AI.
+## Repository Contents
 
-- **FEV – Fundamental Emotion Vector**  
-  The stabilizing “anchor” the AI periodically returns towards.
+- `docs/` — standard mirror excerpts, Appendix A, CIS examples, integration notes
+- `reference/` — minimal reference implementation and demo scripts (non-intrusive side-module)
+- `.github/` — issue templates and contribution guidance
 
-- **Interference Model**  
-  Measures emotional deviation, stability, and resonance across time.
+## Quick Start (Conceptual)
 
-These components together form an emotional memory layer that can be added to any LLM or agent system.
+1. Extract **entry endpoint** from user message.
+2. Generate model response (EVM does not interfere).
+3. Extract **exit endpoint** from the model response.
+4. Update:
+   - PEV from entry endpoint
+   - EEV from exit endpoint (FEV-bounded + recovery)
+5. Append EV to an append-only EV log
+6. Export CIS snapshots for portability/audit
 
----
+See: [docs/INTEGRATION_QUICKSTART.md](docs/INTEGRATION_QUICKSTART.md)
 
-## ⚙️ How it Works (Short Version)
+## Citation
 
-Every interaction runs through:
+If you use or reference EVM academically, please cite the Zenodo DOI release.  
+See: [CITATION.cff](CITATION.cff)
 
-1. **DIA** – internal reflection  
-2. **subDIA** – internal correction  
-3. **EV generation**  
-4. **PEV update**  
-5. **EEV update (with FEV stabilization)**  
-6. **Interference evaluation**  
-7. **ANS** – the external message  
-8. **Three-layer logging** (ANS, EV, DIA)
+## Contact
 
-This process gives the AI consistent emotional behaviour over long time horizons.
-
----
-
-## 📄 Documentation
-
-All technical documentation is located in the **docs/** directory:
-
-- **docs/EVM_Technical_Spec_EN.md** — full technical specification  
-- **docs/README.md** — documentation overview  
-
-System prompts are located in the **prompts/** directory:
-
-- **prompts/SystemPrompt_Average.md** — simplified system prompt  
-- **prompts/SystemPrompt_Full.md** — full system prompt  
-
----
-
-## 🔬 Use Cases
-
-- emotionally adaptive AI agents  
-- synthetic personalities  
-- long-term conversational companions  
-- co-writing and creative systems  
-- therapeutic or supportive interfaces  
-- embodied AI / robotics  
-
----
-
-## 📦 Project Structure
-```
-/
-├── README.md
-├── LICENSE.md
-├── NOTICE.md
-├── vision.md
-├── EVM_minimal_demo.md
-│
-├── docs/
-│   ├── README.md
-│   ├── EVM_Technical_Spec_EN.md
-│   ├── EV_Extensions_and_Extensibility_Guidelines.md
-│   └── philosophy.md
-│
-├── prompts/
-│   ├── SystemPrompt_Minimal.md
-│   ├── SystemPrompt_Average.md
-│   └── SystemPrompt_Full.md
-│
-└── assets/
-    ├── ev_interference_pattern.jpg
-    ├── ev_fiber_timeline.jpg
-    └── eev_formation.jpg
-
-
-
-```
----
-
-## 📜 Legal
-
-This project is provided for research, education and documentation purposes.
-
-**No patent license is granted or implied by this repository.**  
-Cloning, accessing or using this repository does **not** grant rights to any existing or future patent filings related to EVM.
-
-Licensed under **CC BY-NC-ND 4.0**.  
-© 2025–present Szabolcs Krehlik
+For collaboration or licensing:  
+Szabolcs Krehlik — ORCID: 0009-0003-8623-7876  
+Email: szabolcs.krehlik@gmail.com  
+X: @KrehlikSzabolcs
