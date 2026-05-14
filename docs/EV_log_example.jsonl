@@ -1,2 +1,0 @@
-{"t":"2026-02-17T12:00:01Z","interaction_id":"0001","entry_endpoint":[10,5,0,0,20],"exit_endpoint":[12,6,5,5,25],"w":40,"extractor_version_id":"extractor_v1","extractor_config_hash":"sha256:...","fev_profile_id":"default","policy_id":"policy_v1"}
-{"t":"2026-02-17T12:03:10Z","interaction_id":"0002","entry_endpoint":[15,0,10,0,10],"exit_endpoint":[18,2,12,2,15],"w":30,"extractor_version_id":"extractor_v1","extractor_config_hash":"sha256:...","fev_profile_id":"default","policy_id":"policy_v1"}
