@@ -12,7 +12,7 @@
 
 This work demonstrates that LLM interaction can be transformed from stateless output generation into a **measurable, bounded, and fully reproducible dynamical system**.
 
-Using the **Emotion Vector Memory (EVM v2.1)** framework, a continuous 100-turn interaction was executed with a live large language model (GPT-5.4). The experiment included full identity tracking, deterministic vector extraction, bounded state evolution, and automatic recovery dynamics.
+Using the **Evolution Vector Memory (EVM v2.1)** framework, a continuous 100-turn interaction was executed with a live large language model (GPT-5.4). The experiment included full identity tracking, deterministic vector extraction, bounded state evolution, and automatic recovery dynamics.
 
 **Key result:**  
 The system maintained a stable, interpretable identity trajectory across 100 consecutive interactions with **zero boundary violations** and complete reconstructability.
@@ -36,7 +36,7 @@ EV_i = (x_i, y_i, z_i, g_i, e_i, w_i) \rightarrow EV_{i+1}
 \]
 
 - **x** = Relational Openness  
-- **y** = Emotional Valence  
+- **y** = Interaction Orientation  
 - **z** = Cognitive Structure  
 - **g** = Goal/Framing Alignment  
 - **e** = Entity Coherence (AI identity stability)  
@@ -128,7 +128,7 @@ EVM transforms LLM behavior into a **bounded, directed dynamical system** with o
 ## Supplementary Material
 
 Detailed logs, complete EV trajectories, and recovery events are available in the GitHub repository:  
-[https://github.com/krehlikszabolcs/evm-emotion-vector-memory](https://github.com/krehlikszabolcs/evm-emotion-vector-memory)
+[https://github.com/krehlikszabolcs/evm-evolution-vector-memory](https://github.com/krehlikszabolcs/evm-evolution-vector-memory)
 
 ---
 

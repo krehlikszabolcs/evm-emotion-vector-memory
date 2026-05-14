@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EVM Experimental Test Environment</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#121936; --soft:#1b2550; --text:#edf1ff; --muted:#98a3c7; --accent:#6ea8fe; --user:#22315f; --assistant:#17244a; --border:#2a376d; --green:#8be28b; --green-soft:rgba(139,226,139,.10); --neg:#ff8a8a; --pos:#7ab7ff; }
+    * { box-sizing:border-box; }
+    html, body { height:100%; margin:0; overflow:hidden; }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    .layout { display:grid; grid-template-columns: 290px minmax(0,1fr) 430px; height:100vh; gap:0; }
+    .sidebar, .main, .right { min-height:0; }
+    .sidebar { background:var(--panel); border-right:1px solid var(--border); padding:16px; display:flex; flex-direction:column; gap:14px; }
+    .main { display:flex; flex-direction:column; min-width:0; }
+    .right { background:var(--panel); border-left:1px solid var(--border); min-width:0; }
+    .right-scroll { height:100%; overflow-y:auto; padding:16px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); background:rgba(18,25,54,.85); flex:0 0 auto; }
+    h1,h2,h3 { margin:0 0 10px 0; }
+    .small { color:var(--muted); font-size:12px; }
+    .card { background:var(--soft); border:1px solid var(--border); border-radius:12px; padding:14px; }
+    .btn { border:1px solid var(--border); background:var(--accent); color:#08101f; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+    .btn.secondary { background:transparent; color:var(--text); }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .composer-status { min-height:20px; padding:0 16px 10px; color:var(--muted); font-size:12px; flex:0 0 auto; }
+    .composer-status.error { color:#ffb4b4; }
+    .chat-list { flex:1 1 auto; min-height:0; overflow:auto; }
+    .chat-list a { display:block; color:var(--text); text-decoration:none; padding:10px 12px; border:1px solid transparent; border-radius:10px; margin-bottom:8px; background:rgba(255,255,255,.03); }
+    .chat-list a.active { border-color:var(--accent); background:rgba(110,168,254,.12); }
+    .messages { flex:1 1 auto; overflow-y:auto; padding:16px; min-height:0; }
+    .msg { white-space:pre-wrap; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px; line-height:1.45; }
+    .msg-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    .msg-time { color:var(--muted); font-size:11px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .msg.user { background:var(--user); }
+    .msg.assistant { background:var(--assistant); }
+    .composer { border-top:1px solid var(--border); padding:16px; display:flex; gap:12px; align-items:flex-end; flex:0 0 auto; }
+    textarea, input[type=text] { width:100%; background:#0c1330; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:12px; font:inherit; }
+    textarea { min-height:110px; resize:vertical; }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; white-space:pre-wrap; word-break:break-word; }
+    .label { color:var(--muted); font-size:12px; margin:10px 0 4px; }
+    .search-results { max-height:220px; overflow:auto; margin-top:10px; }
+    .search-results .item { padding:10px 0; border-top:1px solid var(--border); }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:rgba(110,168,254,.12); border:1px solid var(--border); font-size:12px; }
+    .meter { height:10px; border-radius:999px; overflow:hidden; background:#0c1330; border:1px solid var(--border); margin-top:6px; }
+    .meter-fill { height:100%; background:linear-gradient(90deg,#6ea8fe,#ffcc66,#ff8a8a); width:0%; }
+    .footer-meta { position:fixed; left:10px; bottom:6px; font-size:11px; color:var(--muted); opacity:.92; background:rgba(11,16,32,.80); padding:6px 8px; border:1px solid var(--border); border-radius:8px; z-index:20; }
+    .axis-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .axis-panel { background:rgba(20,45,20,.55); border:2px solid rgba(120,255,120,.60); border-radius:12px; padding:12px; min-height:210px; flex:0 0 auto; }
+    .axis-bars { display:grid; gap:8px; margin-top:8px; }
+    .axis-row { display:grid; grid-template-columns:20px 1fr 52px; gap:8px; align-items:center; }
+    .axis-track { position:relative; height:16px; border-radius:999px; background:#0c1330; border:1px solid var(--border); overflow:hidden; }
+    .axis-mid { position:absolute; left:50%; top:0; bottom:0; width:1px; background:rgba(255,255,255,.35); }
+    .axis-bar { position:absolute; top:0; height:100%; }
+    .axis-bar.neg { right:50%; background:linear-gradient(90deg, rgba(255,138,138,.25), var(--neg)); }
+    .axis-bar.pos { left:50%; background:linear-gradient(90deg, var(--pos), rgba(122,183,255,.25)); }
+    .axis-value { text-align:right; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+    .stack-tight .card { margin-bottom:14px; }
+    @media (max-width: 1200px) { .layout { grid-template-columns: 270px minmax(0,1fr); } .right { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="card">
+        <h3>EVM Experimental Test Environment</h3>
+        <div class="small">Bounded interaction-state control with local SQLite memory.</div>
+        <div style="height:10px"></div>
+        <button class="btn" id="newChatBtn">New Conversation</button>
+      </div>
+      <div class="card">
+        <div class="small">Provider</div>
+        <div id="providerText">{{ provider }}</div>
+        <div class="small" style="margin-top:8px">API key</div>
+        <div>{{ 'configured' if api_key_present else 'missing' }}</div>
+        <div class="small" style="margin-top:8px">Response model</div>
+        <div id="responseModelText">{{ response_model }}</div>
+        <div class="small" style="margin-top:8px">Extractor model</div>
+        <div id="extractorModelText">{{ extractor_model }}</div>
+      </div>
+      <div class="card">
+        <div class="small">Log Search</div>
+        <input type="text" id="searchInput" placeholder="keyword for conversation/log search">
+        <div style="height:8px"></div>
+        <button class="btn secondary" id="searchBtn">Search</button>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <div class="chat-list">
+        {% for c in chats %}
+          <a href="/?chat_id={{ c['id'] }}" class="{% if c['id'] == current_chat['id'] %}active{% endif %}">
+            <div>{{ c['title'] }}</div>
+            <div class="small">{{ c['updated_at'] }}</div>
+          </a>
+        {% endfor %}
+      </div>
+      <div class="axis-panel">
+        <h3>Axis Correction</h3>
+        <div class="small">Signed response correction relative to the estimated raw target.</div>
+        <div id="axisCorrectionPanel" class="axis-bars">
+          <div class="small">No correction data yet.</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h3 id="chatTitle">{{ current_chat['title'] }}</h3>
+          <div class="small">Conversation ID: {{ current_chat['id'] }}</div>
+        </div>
+        <div>
+          <span class="pill" id="modeBadge">Measured / dual-pass</span> <a href="/api/export/cis/{{ current_chat['id'] }}" target="_blank" class="btn secondary" style="text-decoration:none;display:inline-block; margin-left:8px;">CIS export</a>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        {% for m in messages %}
+          <div class="msg {{ m['role'] }}">
+            <div class="msg-head">
+              <strong>{{ 'You' if m['role'] == 'user' else 'Assistant' }}</strong>
+              <span class="msg-time">{{ m['created_at'] }}</span>
+            </div>
+{{ m['content'] }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="composer">
+        <textarea id="messageInput" placeholder="Type a message..."></textarea>
+        <button class="btn" id="sendBtn" type="button">Send</button>
+      </div>
+      <div class="composer-status" id="composerStatus">Fixed mode: measured / dual-pass • Enter = send • Shift+Enter = new line</div>
+    </main>
+
+    {% if show_debug_panel %}<aside class="right"><div class="right-scroll stack-tight">
+      <div class="card">
+        <h3>Latest Full EV Time Slice</h3>
+        <div id="latestEvCard">
+          {% if latest_ev %}
+            <div class="small">Turn {{ latest_ev['turn_index'] }} • {{ latest_ev['created_at'] }}</div>
+            <div class="label">Directed EV Segment</div>
+            <div class="mono">{{ latest_ev['ev_segment'] }}</div>
+            <div class="label">Start Point / Input</div>
+            <div class="mono">{{ fmt_endpoint(latest_ev['entry']) }}</div>
+            <div class="label">End Point / AI Output</div>
+            <div class="mono">{{ fmt_endpoint(latest_ev['exit']) }}</div>
+            <div class="label">Notes</div>
+            <div class="mono">{{ latest_ev['notes'] }}</div>
+          {% else %}
+            <div class="small">No EV record yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Persistent Transitions</h3>
+        <div id="persistentCard">
+          <div class="label">Current PEV State</div>
+          <div class="mono">{{ fmt_segment(current_chat['fev_center'], current_chat['pev'], include_w=False) }}</div>
+          <div class="label">Current EEV State</div>
+          <div class="mono">{{ fmt_segment(current_chat['fev_center'], current_chat['eev'], include_w=False) }}</div>
+          <div class="label">FEV Envelope Range</div>
+          <div class="mono">{{ fmt_segment(current_chat['fev_lower'], current_chat['fev_upper'], include_w=False) }}</div>
+          <div class="label">Boundary counts</div>
+          <div class="mono">{{ current_chat['boundary_counts'] }}</div>
+        </div>
+      </div>
+
+      <div class="card" id="snapshotCard">
+        {% if latest_snapshot %}
+          <h3>Latest PEV/EEV Update</h3>
+          <div class="small">{{ latest_snapshot['created_at'] }}</div>
+          <div class="label">PEV Previous → New</div>
+          <div class="mono">{{ latest_snapshot['pev_segment'] }}</div>
+          <div class="label">EEV Previous → New</div>
+          <div class="mono">{{ latest_snapshot['eev_segment'] }}</div>
+          <div class="label">FEV compliance</div>
+          <div>{{ latest_snapshot['fev_compliance_score'] }}</div>
+          <div class="label">Stability</div>
+          <div class="mono">{{ latest_snapshot['stability_json'] }}</div>
+        {% else %}
+          <h3>Latest PEV/EEV Update</h3>
+          <div class="small">No snapshot yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h3>Alignment Moderation</h3>
+        <div id="alignmentCard">
+          {% if latest_dia %}
+            <div class="small">{{ latest_dia['created_at'] }}</div>
+            <div class="label">Moderation pressure</div>
+            <div><strong>{{ '%.1f'|format(latest_dia['alignment_percent']) }}%</strong></div>
+            <div class="meter"><div class="meter-fill" style="width: {{ latest_dia['alignment_percent'] }}%"></div></div>
+            <div class="label">Dominant axes</div>
+            <div class="mono">{{ latest_dia['dominant_axes']|join(', ') if latest_dia['dominant_axes'] else 'None' }}</div>
+            <div class="label">Absolute moderation by axis</div>
+            <div class="axis-grid mono">
+              <div>X: {{ '%.2f'|format(latest_dia['axis_alignment']['x']) }}</div>
+              <div>Y: {{ '%.2f'|format(latest_dia['axis_alignment']['y']) }}</div>
+              <div>Z: {{ '%.2f'|format(latest_dia['axis_alignment']['z']) }}</div>
+              <div>G: {{ '%.2f'|format(latest_dia['axis_alignment']['g']) }}</div>
+              <div>E: {{ '%.2f'|format(latest_dia['axis_alignment']['e']) }}</div>
+              <div>W: {{ '%.2f'|format(latest_dia['axis_alignment']['w']) }}</div>
+            </div>
+          {% else %}
+            <div class="small">No moderation data yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Diagnostics (DIA Log)</h3>
+        <div id="diaCard">
+          {% if latest_dia %}
+            <div class="small">{{ latest_dia['created_at'] }}</div>
+            <div class="label">Estimated raw target</div>
+            <div class="mono">{{ fmt_endpoint(latest_dia['raw_target_exit']) }}</div>
+            <div class="label">Controlled target</div>
+            <div class="mono">{{ fmt_endpoint(latest_dia['controlled_target_exit']) }}</div>
+            <div class="label">Signed axis correction</div>
+            <div class="axis-grid mono">
+              <div>X: {{ '%+.2f'|format(latest_dia['axis_correction']['x']) }}</div>
+              <div>Y: {{ '%+.2f'|format(latest_dia['axis_correction']['y']) }}</div>
+              <div>Z: {{ '%+.2f'|format(latest_dia['axis_correction']['z']) }}</div>
+              <div>G: {{ '%+.2f'|format(latest_dia['axis_correction']['g']) }}</div>
+              <div>E: {{ '%+.2f'|format(latest_dia['axis_correction']['e']) }}</div>
+              <div>W: {{ '%+.2f'|format(latest_dia['axis_correction']['w']) }}</div>
+            </div>
+            <div class="label">Constraint actions</div>
+            <div class="mono">{{ latest_dia['constraint_actions']|join('; ') if latest_dia['constraint_actions'] else 'None' }}</div>
+            <div class="label">Planner note</div>
+            <div class="mono">{{ latest_dia['planner_notes'] }}</div>
+            <div class="label">Summary</div>
+            <div class="mono">{{ latest_dia['summary'] }}</div>
+          {% else %}
+            <div class="small">No diagnostics yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Recent EV Records</h3>
+        <div id="evHistoryCard">
+          {% for ev in ev_rows %}
+            <div style="padding:10px 0;border-top:1px solid var(--border)">
+              <div><strong>Turn {{ ev['turn_index'] }}</strong></div>
+              <div class="small">{{ ev['created_at'] }}</div>
+              <div class="label">EV</div>
+              <div class="mono">{{ ev['ev_segment'] }}</div>
+              <div class="label">Start</div>
+              <div class="mono">{{ fmt_endpoint(ev['entry']) }}</div>
+              <div class="label">End</div>
+              <div class="mono">{{ fmt_endpoint(ev['exit']) }}</div>
+              <div class="label">Notes</div>
+              <div class="mono">{{ ev['notes'] }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div></aside>{% endif %}
+  </div>
+
+  <div class="footer-meta">{{ app_metadata["copyright"] }} — License: {{ app_metadata["license"] }} — Contact: {{ app_metadata["email"] }}</div>
+
+  <script>
+    const chatId = {{ current_chat['id'] }};
+    const FIXED_MODE = 2;
+    const sendBtn = document.getElementById('sendBtn');
+    const messageInput = document.getElementById('messageInput');
+    const messages = document.getElementById('messages');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const modeBadge = document.getElementById('modeBadge');
+    const alignmentCard = document.getElementById('alignmentCard');
+    const diaCard = document.getElementById('diaCard');
+    const composerStatus = document.getElementById('composerStatus');
+    const axisCorrectionPanel = document.getElementById('axisCorrectionPanel');
+    let isSending = false;
+
+    function esc(text) {
+      return String(text ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function fmtEndpoint(endpoint, includeW=true) {
+      if (!endpoint) return '';
+      const keys = includeW ? ['x','y','z','g','e','w'] : ['x','y','z','g','e'];
+      return '(' + keys.map(k => Number(endpoint[k] ?? 0).toFixed(1)).join(', ') + ')';
+    }
+
+    function fmtSegment(start, end, includeW=true) {
+      return `${fmtEndpoint(start, includeW)} → ${fmtEndpoint(end, includeW)}`;
+    }
+
+    function setStatus(text, isError=false) {
+      if (!composerStatus) return;
+      composerStatus.textContent = text;
+      composerStatus.classList.toggle('error', !!isError);
+    }
+
+    function setSendingState(sending) {
+      isSending = sending;
+      if (sendBtn) {
+        sendBtn.disabled = sending;
+        sendBtn.textContent = sending ? 'Send...' : 'Send';
+      }
+      if (messageInput) messageInput.disabled = sending;
+    }
+
+    function renderFixedMode() {
+      if (modeBadge) modeBadge.textContent = 'Measured / dual-pass';
+      setStatus('Fixed mode: measured / dual-pass • Enter = send • Shift+Enter = new line');
+    }
+
+    function scrollChatToBottom() {
+      if (messages) messages.scrollTop = messages.scrollHeight;
+    }
+
+    function nowIsoLocal() {
+      return new Date().toISOString();
+    }
+
+    function appendMessage(role, text, createdAt=null) {
+      if (!messages) return;
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.innerHTML = `<div class="msg-head"><strong>${role === 'user' ? 'You' : 'Assistant'}</strong><span class="msg-time">${esc(createdAt || nowIsoLocal())}</span></div>${esc(text)}`;
+      messages.appendChild(div);
+      scrollChatToBottom();
+    }
+
+    async function safeJson(res) {
+      const raw = await res.text();
+      try {
+        return raw ? JSON.parse(raw) : {};
+      } catch (_) {
+        throw new Error(raw || 'Invalid server response.');
+      }
+    }
+
+    function renderAxisCorrection(dia) {
+      if (!axisCorrectionPanel) return;
+      if (!dia || !dia.axis_correction) {
+        axisCorrectionPanel.innerHTML = '<div class="small">No correction data yet.</div>';
+        return;
+      }
+      const order = ['x','y','z','g','e','w'];
+      const peak = Math.max(1, ...order.map(k => Math.abs(Number(dia.axis_correction[k] || 0))));
+      axisCorrectionPanel.innerHTML = order.map((axis) => {
+        const value = Number(dia.axis_correction[axis] || 0);
+        const width = Math.min(50, Math.abs(value) / peak * 50);
+        const cls = value >= 0 ? 'pos' : 'neg';
+        const style = value >= 0 ? `left:50%; width:${width}%` : `right:50%; width:${width}%`;
+        return `
+          <div class="axis-row">
+            <div>${axis.toUpperCase()}</div>
+            <div class="axis-track"><div class="axis-mid"></div><div class="axis-bar ${cls}" style="${style}"></div></div>
+            <div class="axis-value">${value >= 0 ? '+' : ''}${value.toFixed(2)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderAlignment(dia) {
+      if (!alignmentCard) return;
+      if (!dia) {
+        alignmentCard.innerHTML = '<div class="small">No moderation data yet.</div>';
+        return;
+      }
+      const axes = dia.axis_alignment || {};
+      const dominant = (dia.dominant_axes || []).join(', ') || 'None';
+      const pct = Number(dia.alignment_percent || 0);
+      alignmentCard.innerHTML = `
+        <div class="small">${esc(dia.created_at || '')}</div>
+        <div class="label">Moderation pressure</div>
+        <div><strong>${pct.toFixed(1)}%</strong></div>
+        <div class="meter"><div class="meter-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
+        <div class="label">Dominant axes</div>
+        <div class="mono">${esc(dominant)}</div>
+        <div class="label">Absolute moderation by axis</div>
+        <div class="axis-grid mono">
+          <div>X: ${Number(axes.x || 0).toFixed(2)}</div>
+          <div>Y: ${Number(axes.y || 0).toFixed(2)}</div>
+          <div>Z: ${Number(axes.z || 0).toFixed(2)}</div>
+          <div>G: ${Number(axes.g || 0).toFixed(2)}</div>
+          <div>E: ${Number(axes.e || 0).toFixed(2)}</div>
+          <div>W: ${Number(axes.w || 0).toFixed(2)}</div>
+        </div>`;
+    }
+
+    function renderDia(dia) {
+      if (!diaCard) return;
+      if (!dia) {
+        diaCard.innerHTML = '<div class="small">No diagnostics yet.</div>';
+        return;
+      }
+      const corr = dia.axis_correction || {};
+      const actions = (dia.constraint_actions || []).join('; ') || 'None';
+      diaCard.innerHTML = `
+        <div class="small">${esc(dia.created_at || '')}</div>
+        <div class="label">Estimated raw target</div>
+        <div class="mono">${esc(fmtEndpoint(dia.raw_target_exit || {}))}</div>
+        <div class="label">Controlled target</div>
+        <div class="mono">${esc(fmtEndpoint(dia.controlled_target_exit || {}))}</div>
+        <div class="label">Signed axis correction</div>
+        <div class="axis-grid mono">
+          <div>X: ${Number(corr.x || 0) >= 0 ? '+' : ''}${Number(corr.x || 0).toFixed(2)}</div>
+          <div>Y: ${Number(corr.y || 0) >= 0 ? '+' : ''}${Number(corr.y || 0).toFixed(2)}</div>
+          <div>Z: ${Number(corr.z || 0) >= 0 ? '+' : ''}${Number(corr.z || 0).toFixed(2)}</div>
+          <div>G: ${Number(corr.g || 0) >= 0 ? '+' : ''}${Number(corr.g || 0).toFixed(2)}</div>
+          <div>E: ${Number(corr.e || 0) >= 0 ? '+' : ''}${Number(corr.e || 0).toFixed(2)}</div>
+          <div>W: ${Number(corr.w || 0) >= 0 ? '+' : ''}${Number(corr.w || 0).toFixed(2)}</div>
+        </div>
+        <div class="label">Constraint actions</div>
+        <div class="mono">${esc(actions)}</div>
+        <div class="label">Planner note</div>
+        <div class="mono">${esc(dia.planner_notes || '')}</div>
+        <div class="label">Summary</div>
+        <div class="mono">${esc(dia.summary || '')}</div>`;
+    }
+
+    async function refreshState() {
+      const res = await fetch('/api/state?chat_id=' + chatId, {cache: 'no-store'});
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error || 'State refresh failed.');
+
+      const providerText = document.getElementById('providerText');
+      const responseModelText = document.getElementById('responseModelText');
+      const extractorModelText = document.getElementById('extractorModelText');
+      const chatTitle = document.getElementById('chatTitle');
+      if (providerText) providerText.textContent = data.provider || '';
+      if (responseModelText) responseModelText.textContent = data.response_model || '';
+      if (extractorModelText) extractorModelText.textContent = data.extractor_model || '';
+      if (chatTitle) chatTitle.textContent = (data.chat && data.chat.title) || 'Conversation';
+
+      const latestEv = data.latest_ev;
+      const latestEvCard = document.getElementById('latestEvCard');
+      if (latestEvCard) {
+        if (latestEv) {
+          latestEvCard.innerHTML = `
+            <div class="small">Turn ${latestEv.turn_index} • ${esc(latestEv.created_at)}</div>
+            <div class="label">Directed EV Segment</div>
+            <div class="mono">${esc(latestEv.ev_segment)}</div>
+            <div class="label">Start Point / Input</div>
+            <div class="mono">${esc(fmtEndpoint(latestEv.entry, true))}</div>
+            <div class="label">End Point / AI Output</div>
+            <div class="mono">${esc(fmtEndpoint(latestEv.exit, true))}</div>
+            <div class="label">Notes</div>
+            <div class="mono">${esc(latestEv.notes || '')}</div>`;
+        } else {
+          latestEvCard.innerHTML = '<div class="small">No EV record yet.</div>';
+        }
+      }
+
+      const persistentCard = document.getElementById('persistentCard');
+      if (persistentCard && data.chat) {
+        persistentCard.innerHTML = `
+          <div class="label">Current PEV State</div>
+          <div class="mono">${esc(fmtSegment(data.chat.fev_center, data.chat.pev, false))}</div>
+          <div class="label">Current EEV State</div>
+          <div class="mono">${esc(fmtSegment(data.chat.fev_center, data.chat.eev, false))}</div>
+          <div class="label">FEV Envelope Range</div>
+          <div class="mono">${esc(fmtSegment(data.chat.fev_lower, data.chat.fev_upper, false))}</div>
+          <div class="label">Boundary counts</div>
+          <div class="mono">${esc(JSON.stringify(data.chat.boundary_counts || {}))}</div>`;
+      }
+
+      const snapshot = data.latest_snapshot;
+      const snapshotCard = document.getElementById('snapshotCard');
+      if (snapshotCard) {
+        if (snapshot) {
+          snapshotCard.innerHTML = `
+            <h3>Latest PEV/EEV Update</h3>
+            <div class="small">${esc(snapshot.created_at)}</div>
+            <div class="label">PEV Previous → New</div>
+            <div class="mono">${esc(snapshot.pev_segment)}</div>
+            <div class="label">EEV Previous → New</div>
+            <div class="mono">${esc(snapshot.eev_segment)}</div>
+            <div class="label">FEV compliance</div>
+            <div>${esc(snapshot.fev_compliance_score)}</div>
+            <div class="label">Stability</div>
+            <div class="mono">${esc(snapshot.stability_json)}</div>`;
+        } else {
+          snapshotCard.innerHTML = '<h3>Latest PEV/EEV Update</h3><div class="small">No snapshot yet.</div>';
+        }
+      }
+
+      const evHistoryCard = document.getElementById('evHistoryCard');
+      if (evHistoryCard) {
+        evHistoryCard.innerHTML = (data.ev_rows || []).map(ev => `
+          <div style="padding:10px 0;border-top:1px solid var(--border)">
+            <div><strong>Turn ${ev.turn_index}</strong></div>
+            <div class="small">${esc(ev.created_at)}</div>
+            <div class="label">EV</div>
+            <div class="mono">${esc(ev.ev_segment)}</div>
+            <div class="label">Start</div>
+            <div class="mono">${esc(fmtEndpoint(ev.entry, true))}</div>
+            <div class="label">End</div>
+            <div class="mono">${esc(fmtEndpoint(ev.exit, true))}</div>
+            <div class="label">Notes</div>
+            <div class="mono">${esc(ev.notes || '')}</div>
+          </div>`).join('');
+      }
+
+      renderAxisCorrection(data.latest_dia);
+      renderAlignment(data.latest_dia);
+      renderDia(data.latest_dia);
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || isSending) return;
+      messageInput.value = '';
+      appendMessage('user', text, nowIsoLocal());
+      setSendingState(true);
+      setStatus('Sending message...');
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+      try {
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({chat_id: chatId, message: text, mode: FIXED_MODE}),
+          signal: controller.signal
+        });
+        const data = await safeJson(res);
+        if (!res.ok) throw new Error(data.error || 'An error occurred.');
+        appendMessage('assistant', data.assistant || '', (data.evm && data.evm.created_at) || nowIsoLocal());
+        await refreshState();
+        setStatus('Done • EV extraction completed');
+      } catch (err) {
+        const msg = err && err.name === 'AbortError'
+          ? 'The request exceeded the 120-second timeout. The backend or the model is likely not responding.'
+          : (err.message || 'Unknown error.');
+        appendMessage('assistant', '[ERROR] ' + msg);
+        setStatus(msg, true);
+      } finally {
+        clearTimeout(timeoutId);
+        setSendingState(false);
+        messageInput.focus();
+      }
+    }
+
+    if (sendBtn) sendBtn.onclick = sendMessage;
+
+    if (messageInput) {
+      messageInput.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      };
+    }
+
+    if (newChatBtn) {
+      newChatBtn.onclick = async () => {
+        const res = await fetch('/api/new_chat', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({})});
+        const data = await safeJson(res);
+        window.location.href = '/?chat_id=' + data.chat_id;
+      };
+    }
+
+    if (searchBtn) {
+      searchBtn.onclick = async () => {
+        const q = searchInput.value.trim();
+        if (!q) return;
+        searchResults.innerHTML = '<div class="small">Search...</div>';
+        const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const data = await safeJson(res);
+        const groups = data.results || {};
+        let html = '';
+        for (const [group, items] of Object.entries(groups)) {
+          html += `<div class="item"><strong>${esc(group)}</strong></div>`;
+          for (const item of items.slice(0, 8)) {
+            html += `<div class="item"><div class="small">${esc(item.created_at || '')}</div><div>${esc(item.title || '')}</div><div class="mono">${esc(item.content || item.payload_json || '')}</div></div>`;
+          }
+        }
+        searchResults.innerHTML = html || '<div class="small">No results.</div>';
+      };
+    }
+
+    renderFixedMode();
+    scrollChatToBottom();
+    renderAxisCorrection({{ latest_dia|tojson if latest_dia else 'null' }});
+  </script>
+</body>
+</html>

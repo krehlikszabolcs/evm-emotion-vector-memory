@@ -1,0 +1,7 @@
+EVM Experimental Test Environment — Security Note
+
+1. Always use your own API key.
+2. Do not upload the `.env` file to GitHub or other public locations.
+3. If an API key is exposed, revoke it and create a new one.
+4. The key is stored locally in the project directory `.env` file.
+5. Local memory is stored in the SQLite database: `DATA/sqlite/evm.sqlite3`.

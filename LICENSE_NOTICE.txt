@@ -1,0 +1,9 @@
+EVM Experimental Test Environment
+
+Author: Szabolcs Krehlik
+Contact: szabolcs.krehlik@gmail.com
+License: CC-BY-NC-ND 4.0
+Copyright: © 2026 Szabolcs Krehlik
+
+This package is provided for testing, research, inspection, and non-commercial evaluation only.
+Commercial use is not permitted without explicit permission from the author.
